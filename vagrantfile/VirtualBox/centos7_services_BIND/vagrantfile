@@ -95,7 +95,7 @@ dns2\tIN\tA\t192.168.56.53
 
 ; Define hostname -> IP pairs which you wish to resolve
 @\t\tIN\tA\t192.168.56.52
-elasticsearch\t\tIN\tA\t192.168.56.50
+elasticstack\t\tIN\tA\t192.168.56.50
 salt\t\tIN\tA\t192.168.56.51
 service\t\tIN\tA\t192.168.56.52
 service1\t\tIN\tA\t192.168.56.52
@@ -119,7 +119,7 @@ echo -e '$TTL    604800
 ; PTR Records
 $ORIGIN 56.168.192.in-addr.arpa.
 
-0\tIN\tPTR\telasticsearch.mondomain.fr.
+0\tIN\tPTR\telasticstack.mondomain.fr.
 1\tIN\tPTR\tsalt.mondomain.fr.
 2\tIN\tPTR\tservice1.mondomain.fr.
 3\tIN\tPTR\tservice2.mondomain.fr.
