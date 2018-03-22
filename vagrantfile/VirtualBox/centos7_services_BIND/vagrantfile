@@ -1,0 +1,142 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/centos-7.3"
+  config.vm.network "private_network", ip: "192.168.56.52"
+  
+  
+  config.vm.provision "shell", inline: <<-SHELL
+		
+
+	hostname service1
+	
+	yum reinstall -y epel-release
+	
+	#OUTILS
+	yum install -y git 
+	
+	#SALT
+	rpm --import http://repo.saltstack.com/yum/redhat/7/x86_64/latest/SALTSTACK-GPG-KEY.pub
+	cat > /etc/yum.repos.d/salt.repo << EOF
+[saltstack-repo]
+name=SaltStack repo for RHEL/CentOS 7
+baseurl=http://repo.saltstack.com/yum/redhat/7/x86_64/latest/
+enabled=1
+gpgcheck=1
+gpgkey=http://repo.saltstack.com/yum/redhat/7/x86_64/latest/SALTSTACK-GPG-KEY.pub
+EOF
+	yum install -y salt-minion
+	
+
+	#BIND
+	yum install -y bind bind-utils
+
+	cat > /etc/named.conf << EOF
+options {
+        listen-on port 53 { 127.0.0.1; 192.168.56.52; };
+        #listen-on-v6 port 53 { ::1; };
+        directory       "/var/named";
+        dump-file       "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+        allow-query     { any; };
+		allow-transfer     { localhost; 192.168.56.53; };
+
+        recursion yes;
+
+        dnssec-enable yes;
+        dnssec-validation yes;
+		dnssec-lookaside auto;
+
+        /* Path to ISC DLV key */
+        bindkeys-file "/etc/named.iscdlv.key";
+
+        managed-keys-directory "/var/named/dynamic";
+
+        pid-file "/run/named/named.pid";
+        session-keyfile "/run/named/session.key";
+};
+
+logging {
+        channel default_debug {
+                file "data/named.run";
+                severity dynamic;
+        };
+};
+
+zone "mondomain.fr" {
+        type master;
+        file "/etc/named/db.mondomain.fr";
+};
+
+zone "56.168.192.in-addr.arpa" {
+        type master;
+        file "/etc/named/db.192.168.56";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";	
+EOF
+
+echo -e '$TTL 86400
+@   IN  SOA     dns1.mondomain.fr. root.mondomain.fr. (
+\t\t2018031601  ;Serial
+\t\t1D        ;Refresh
+\t\t1H        ;Retry
+\t\t1W      ;Expire
+\t\t3H       ;Minimum TTL
+)
+
+; Specify our two nameservers
+\tIN\tNS\tdns1.mondomain.fr.
+\tIN\tNS\tdns2.mondomain.fr.
+
+; Resolve nameserver hostnames to IP, replace with your two droplet IP addresses.
+dns1\tIN\tA\t192.168.56.52
+dns2\tIN\tA\t192.168.56.53
+
+; Define hostname -> IP pairs which you wish to resolve
+@\t\tIN\tA\t192.168.56.52
+elasticsearch\t\tIN\tA\t192.168.56.50
+salt\t\tIN\tA\t192.168.56.51
+service\t\tIN\tA\t192.168.56.52
+service1\t\tIN\tA\t192.168.56.52
+service2\t\tIN\tA\t192.168.56.53
+docker\t\tIN\tA\t192.168.56.54
+' > /etc/named/db.mondomain.fr
+
+echo -e '$TTL    604800
+@       IN      SOA     dns1.mondomain.fr. root.dns1.mondomain.fr.     (
+\t\t2018031601  ;Serial
+\t\t1D        ;Refresh
+\t\t1H        ;Retry
+\t\t1W      ;Expire
+\t\t3H       ;Minimum TTL
+)
+
+; name servers
+\tIN\tNS\tdns1.mondomain.fr.
+\tIN\tNS\tdns2.mondomain.fr.
+
+; PTR Records
+$ORIGIN 56.168.192.in-addr.arpa.
+
+0\tIN\tPTR\telasticsearch.mondomain.fr.
+1\tIN\tPTR\tsalt.mondomain.fr.
+2\tIN\tPTR\tservice1.mondomain.fr.
+3\tIN\tPTR\tservice2.mondomain.fr.
+4\tIN\tPTR\tdocker.mondomain.fr.
+' > /etc/named/db.192.168.56
+
+	rndc reconfig
+	systemctl start named
+	systemctl enable named
+	
+	cat > /etc/resolv.conf << EOF
+search mondomain.fr
+nameserver 127.0.0.1
+options single-request-reopen
+EOF
+	
+  SHELL
+
+ 
+end
