@@ -4,7 +4,7 @@ Vagrant.configure("2") do |config|
 		v.cpus = 2
   end
   config.vm.box = "centos/7"
-  config.vm.network "private_network", ip: "192.168.56.55"
+  config.vm.network "private_network", ip: "192.168.56.50"
   
   config.vm.provision "shell", inline: <<-SHELL
 	# Prerequis
@@ -25,9 +25,9 @@ autorefresh=1
 type=rpm-md
 EOF
 	yum -y install kibana
-	sed 's/#server.host: "localhost"/server.host: "192.168.56.55"/g' -i /etc/kibana/kibana.yml
+	sed 's/#server.host: "localhost"/server.host: "192.168.56.50"/g' -i /etc/kibana/kibana.yml
 	sed 's/#elasticsearch.url/elasticsearch.url/g' -i /etc/kibana/kibana.yml
-	sed 's/localhost/192.168.56.55/g' -i /etc/kibana/kibana.yml
+	sed 's/localhost/192.168.56.50/g' -i /etc/kibana/kibana.yml
 	systemctl start kibana
 	systemctl enable kibana
 	
@@ -39,7 +39,7 @@ EOF
 	cat > /etc/logstash/conf.d/logstash.conf << EOF
 input {
   udp {
-    host => "192.168.56.55"
+    host => "192.168.56.50"
     port => 10514
     codec => "json"
     type => "rsyslog"
@@ -51,7 +51,7 @@ filter { }
 output {
   if [type] == "rsyslog" {
     elasticsearch {
-      hosts => [ "192.168.56.55:9200" ]
+      hosts => [ "192.168.56.50:9200" ]
     }
   }
 }
@@ -68,7 +68,7 @@ EOF
 	yum -y install elasticsearch
 	ulimit -u 2048
 	sed 's/#network.host/network.host/g' -i /etc/elasticsearch/elasticsearch.yml
-	sed 's/192.168.0.1/192.168.56.55/g' -i /etc/elasticsearch/elasticsearch.yml
+	sed 's/192.168.0.1/192.168.56.50/g' -i /etc/elasticsearch/elasticsearch.yml
 	systemctl start elasticsearch
 	systemctl enable elasticsearch;
 		
