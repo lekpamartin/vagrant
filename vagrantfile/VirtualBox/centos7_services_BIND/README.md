@@ -1,3 +1,3 @@
 #Services
 
-<h1>Bind</h1>
+<h2>Bind</h2>

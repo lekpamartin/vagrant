@@ -1,7 +1,7 @@
 #ELK
 
-</h1>Elastic search</h1>
+<h2>Elastic search</h2>
 
-</h1>Logstash</h1>
+<h2>Logstash</h2>
 
-</h1>Kibana</h1>
+<h2>Kibana</h2>

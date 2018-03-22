@@ -1,5 +1,5 @@
 #DOCKER
 
-</h1>Docker</h1>
+<h2>Docker</h2>
 
-</h1>Docker compose</h1>
+<h2>Docker compose</h2>
