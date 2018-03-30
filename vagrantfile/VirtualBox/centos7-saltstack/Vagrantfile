@@ -1,0 +1,47 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/centos-7.3"
+  config.vm.network "private_network", ip: "192.168.56.51"
+  
+  
+  config.vm.provision "shell", inline: <<-SHELL
+		
+
+	hostname saltstack
+	
+	yum reinstall -y epel-release
+	
+	#GIT
+	yum install -y git
+	
+	#SALT
+	rpm --import http://repo.saltstack.com/yum/redhat/7/x86_64/latest/SALTSTACK-GPG-KEY.pub
+	cat > /etc/yum.repos.d/salt.repo << EOF
+[saltstack-repo]
+name=SaltStack repo for RHEL/CentOS 7
+baseurl=http://repo.saltstack.com/yum/redhat/7/x86_64/latest/
+enabled=1
+gpgcheck=1
+gpgkey=http://repo.saltstack.com/yum/redhat/7/x86_64/latest/SALTSTACK-GPG-KEY.pub
+EOF
+	yum install -y salt-master salt-cloud salt-api #salt-minion
+		
+	echo "127.0.0.1       salt" >> /etc/hosts
+
+	cd /tmp
+	git clone https://github.com/lekpamartin/saltstack.git
+	mv saltstack/salt/* /etc/salt/
+	rm -rf saltstack
+	
+	#Installation de gitpython: vous pouvez à la place installer pygit2
+	curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+	python get-pip.py
+	pip install gitpython
+	
+	systemctl start salt-master
+	#systemctl start salt-minion 
+		
+	
+  SHELL
+
+ 
+end
