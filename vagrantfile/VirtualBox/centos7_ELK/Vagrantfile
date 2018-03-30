@@ -1,12 +1,15 @@
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
-		v.memory = 4096
-		v.cpus = 2
+		v.memory = 1024
+		v.cpus = 1
   end
   config.vm.box = "bento/centos-7.3"
   config.vm.network "private_network", ip: "192.168.56.50"
   
   config.vm.provision "shell", inline: <<-SHELL
+	
+	hostname elasticstack
+	
 	# Prerequis
 	yum -y install java java-1.8.0-openjdk-devel
 	
@@ -49,27 +52,42 @@ input {
 filter { }
 
 output {
-  if [type] == "rsyslog" {
-    elasticsearch {
-      hosts => [ "192.168.56.50:9200" ]
-    }
+  elasticsearch {
+    hosts => [ "192.168.56.50:9200" ]
+    index => "logstash-%{type}-%{+YYYY.MM.dd}"
   }
 }
-
 EOF
-
 	systemctl start logstash
 	systemctl enable logstash
+	
+	#Transfert des logs syslog vers logstash
+	echo "*.*	@192.168.56.50:10514" > /etc/rsyslog.d/test.conf
+	systemctl restart rsyslog
 	
 	######################################
 	#Install and Configure Elasticsearch
 	######################################
+	
 	#Utilise le repo ci-dessus
 	yum -y install elasticsearch
-	ulimit -u 2048
+	
+	mkdir -p /data/elasticsearch
+	chown elasticsearch: /data/elasticsearch
+	ulimit -u 65536
+	#Renommage cluster
+	sed 's/#cluster.name: my-application/cluster.name: cluster-elasticsearch/g' -i /etc/elasticsearch/elasticsearch.yml
+	#Renommage node
+	sed 's/#node.name/node.name/g' -i /etc/elasticsearch/elasticsearch.yml
+	#Affectation IP
 	sed 's/#network.host/network.host/g' -i /etc/elasticsearch/elasticsearch.yml
-	sed 's/192.168.0.1/192.168.56.50/g' -i /etc/elasticsearch/elasticsearch.yml
+	sed 's/192.168.0.1/["192.168.56.50", _local_]/g' -i /etc/elasticsearch/elasticsearch.yml
+	#Activation unicast pour le cluster 
+	sed 's/#discovery.zen.ping.unicast.hosts: ["host1", "host2"]/discovery.zen.ping.unicast.hosts: ["192.168.56.50", "192.168.56.51"]/g' -i /etc/elasticsearch/elasticsearch.yml
 	systemctl start elasticsearch
+	
+	#Start second node
+	#ulimit -n 65536; su elasticsearch -c "/usr/share/elasticsearch/bin/elasticsearch -d -Enode.name=node-2 -Epath.data=/data/elasticsearch -Epath.logs=/var/log/elasticsearch/nodes/2" -s /bin/bash
 	systemctl enable elasticsearch;
 		
   SHELL
