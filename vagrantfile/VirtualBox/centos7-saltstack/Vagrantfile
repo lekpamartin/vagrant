@@ -28,7 +28,7 @@ EOF
 	echo "127.0.0.1       salt" >> /etc/hosts
 
 	cd /tmp
-	git clone https://github.com/lekpamartin/saltstack.git
+	git clone https://github.com/lekpamartin/salt-stack.git
 	mv saltstack/salt/* /etc/salt/
 	rm -rf saltstack
 	
