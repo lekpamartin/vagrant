@@ -28,14 +28,19 @@ EOF
 	echo "127.0.0.1       salt" >> /etc/hosts
 
 	cd /tmp
-	git clone https://github.com/lekpamartin/salt-stack.git
+	git clone https://github.com/lekpamartin/saltstack.git
 	mv saltstack/salt/* /etc/salt/
 	rm -rf saltstack
 	
-	#Installation de gitpython: vous pouvez à la place installer pygit2
+	#Installation de pip
 	curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 	python get-pip.py
+	rm -f get-pip.py
+	
+	#Pour la communication entre salt et git : gitpython ou pygit2
 	pip install gitpython
+	#Pour la communication entre salt et elasticsearch : elasticsearch-py
+	pip install elasticsearch
 	
 	systemctl start salt-master
 	#systemctl start salt-minion 
