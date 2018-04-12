@@ -41,6 +41,8 @@ EOF
 	pip install gitpython
 	#Pour la communication entre salt et elasticsearch : elasticsearch-py
 	pip install elasticsearch
+	#Pour la communication entre salt et logstash : elasticsearch-py
+	pip install python-logstash
 	
 	systemctl start salt-master
 	#systemctl start salt-minion 
