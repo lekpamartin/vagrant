@@ -30,7 +30,8 @@ hash_type: sha256
 EOF
 
 	cat > /etc/salt/grains << EOF
-datacenter: DC1
+environment_datacenter: DC1
+environment_cluster: CLS1
 environment_type: COPROD
 environment_name: VABF
 EOF
