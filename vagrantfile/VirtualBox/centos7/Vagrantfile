@@ -29,6 +29,12 @@ log_file: udp://localhost:514/LOG_LOCAL3
 hash_type: sha256
 EOF
 
+	cat > /etc/salt/grains << EOF
+datacenter: DC1
+environment_type: COPROD
+environment_name: VABF
+EOF
+
 	systemctl start salt-minion
 		
 	
