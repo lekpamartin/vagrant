@@ -1,0 +1,67 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/centos-7.3"
+  config.vm.network "private_network", ip: "192.168.56.54" 
+  
+  config.vm.provision "shell", inline: <<-SHELL
+	
+	hostname docker-swarm-manager
+	
+	yum reinstall -y epel-release
+	
+	#SALT-MINION
+	rpm --import http://repo.saltstack.com/yum/redhat/6/x86_64/latest/SALTSTACK-GPG-KEY.pub
+	cat > /etc/yum.repos.d/salt.repo << EOF
+[saltstack-repo]
+name=SaltStack repo for RHEL/CentOS 6
+baseurl=http://repo.saltstack.com/yum/redhat/6/x86_64/latest/
+enabled=1
+gpgcheck=1
+gpgkey=http://repo.saltstack.com/yum/redhat/6/x86_64/latest/SALTSTACK-GPG-KEY.pub
+EOF
+	yum install -y salt-minion
+	service salt-minion start; chkconfig salt-minion on
+	
+	#DOCKER-EE
+	#prerequis
+	yum install -y yum-utils device-mapper-persistent-data lvm2
+	#Installation 
+	yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+	yum -y install docker-ce
+	systemctl start docker
+	
+
+	###############
+	## SWARM
+	###############
+	echo "To add a worker to this swarm, run:
+	" >> /etc/motd
+	docker swarm init --advertise-addr enp0s8 |grep "docker swarm" -A1 -B1 >> /etc/motd
+	cd /tmp; mkdir -p serveurweb/public-html; cd serveurweb
+	cat > Dockerfile << EOF
+FROM httpd:latest
+COPY ./public-html/ /usr/local/apache2/htdocs/
+EOF
+
+echo "<html>
+	<head>
+		<title> random $RANDOM</title>
+	</head>
+<body>
+	<p>random: $RANDOM</p>
+</body>
+</html>" > public-html/index.html 
+
+	#Création de l'image 
+	docker build -t serveurweb .
+	
+	# Création d'un service
+	docker service create --replicas 3 --name serveurweb -p 80:80 serveurweb
+	
+	
+  SHELL
+
+  config.vm.provision :salt do |salt|
+    salt.run_highstate = false
+  end
+  
+end
