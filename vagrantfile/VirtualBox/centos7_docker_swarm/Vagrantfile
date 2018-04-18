@@ -34,7 +34,7 @@ EOF
 	## SWARM
 	###############
 	echo "
-To add a worker to this swarm, run: " >> /etc/motd
+To add a worker to this swarm, run on it: " >> /etc/motd
 	docker swarm init --advertise-addr enp0s8 |grep "docker swarm" -A1 -B1 >> /etc/motd
 	cd /tmp; mkdir -p serveurweb/public-html; cd serveurweb
 	cat > Dockerfile << EOF
