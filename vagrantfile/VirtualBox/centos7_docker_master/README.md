@@ -2,7 +2,7 @@
 
 <h2>Orchestrateur</h2>
 
-<h2>Docker swarm</h2>
+<h3>Docker swarm</h3>
 
-<h2>Kubernetes</h2>
+<h3>Kubernetes</h3>
 Pas encore disponible dans le vagrantfile
