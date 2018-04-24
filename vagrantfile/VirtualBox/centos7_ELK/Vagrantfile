@@ -1,6 +1,6 @@
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
-		v.memory = 1024
+		v.memory = 2048
 		v.cpus = 1
   end
   config.vm.box = "bento/centos-7.3"
@@ -47,6 +47,12 @@ input {
     codec => "json"
     type => "rsyslog"
   }
+  
+  beats {
+    host => "192.168.56.50"
+    port => 5044
+    type => "beats"
+  }
 }
 
 filter { }
@@ -83,12 +89,23 @@ EOF
 	sed 's/#network.host/network.host/g' -i /etc/elasticsearch/elasticsearch.yml
 	sed 's/192.168.0.1/["192.168.56.50", _local_]/g' -i /etc/elasticsearch/elasticsearch.yml
 	#Activation unicast pour le cluster 
-	sed 's/#discovery.zen.ping.unicast.hosts: ["host1", "host2"]/discovery.zen.ping.unicast.hosts: ["192.168.56.50", "192.168.56.51"]/g' -i /etc/elasticsearch/elasticsearch.yml
+	#sed 's/#discovery.zen.ping.unicast.hosts: ["host1", "host2"]/discovery.zen.ping.unicast.hosts: ["192.168.56.50", "192.168.56.51"]/g' -i /etc/elasticsearch/elasticsearch.yml
 	systemctl start elasticsearch
 	
 	#Start second node
 	#ulimit -n 65536; su elasticsearch -c "/usr/share/elasticsearch/bin/elasticsearch -d -Enode.name=node-2 -Epath.data=/data/elasticsearch -Epath.logs=/var/log/elasticsearch/nodes/2" -s /bin/bash
 	systemctl enable elasticsearch;
+	
+	######################################
+	#Install and Configure Metricbeat
+	######################################
+	
+	#Installation
+	yum -y install metricbeat
+	
+	#Ajout du tableau de bord 
+	cd /usr/share/metricbeat/bin
+	metricbeat setup --dashboards -E setup.kibana.host=192.168.56.50:5601 -E setup.dashboards.directory=/usr/share/metricbeat/kibana
 		
   SHELL
 
