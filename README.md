@@ -1,5 +1,5 @@
 # vagrant
-Vagrant
+Tools for easy generate test environment. 
 
 ## Configuration
 
