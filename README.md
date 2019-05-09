@@ -3,9 +3,13 @@ Tools for easy generate test environment.
 
 ## Configuration
 
+### Proxy
+Vagrant is able to use http_proxy, https_proxy, ... environment variable when he need to download box, plugin, ... 
+
 ### Plugin 
 Vagrant have some plugin to interact with some product.
-### Proxy
+
+#### Proxy
 If you want to use vagrant with proxy, you need to install this plugin 
 ```bash
 vagrant plugin install vagrant-proxyconf
